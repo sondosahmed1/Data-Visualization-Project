@@ -1,7 +1,11 @@
 import pandas as pd
 import plotly.express as px
 
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+csv_path = BASE_DIR / "preprocessing" / "owid_energy_visualization_cleaned.csv"
 # =========================================================
 # Load Data
 # =========================================================
@@ -155,7 +159,8 @@ def bubble_avg_generation_per_year(df):
 
 if __name__ == "__main__":
 
-    csv_path = r"C:\\Uni\\Semester 6\\Data Visiualization\\Data-Visualization-Project\\preprocessing\\owid_energy_visualization_cleaned.csv"
+    print("CSV path:", csv_path)
+    print("Exists:", csv_path.exists())
 
     df = load_data(csv_path)
     df = detect_outliers(df)
