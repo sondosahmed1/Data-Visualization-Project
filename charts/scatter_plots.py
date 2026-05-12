@@ -122,86 +122,92 @@ def _apply_layout(fig, x_label, y_label):
 
 
 # =========================================================
-# Scatter Charts with Outlier Labels
+# Scatter Charts
 # =========================================================
 def scatter_gdp_vs_electricity(df):
+    df = df.copy()
+    df["log_gdp"] = np.log10(df["gdp"])
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+
+    df = df.dropna(subset=["log_gdp", "log_electricity_generation"])
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available", showarrow=False)
+        return fig
+
     fig = px.scatter(
         df, x="log_gdp", y="log_electricity_generation", color="Point Type",
         color_discrete_map=_COLOR_MAP, opacity=0.45,
-        hover_name="country", hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "gdp", "electricity_generation"],
-        title="GDP vs Electricity Generation (log₁₀ axes) — Outliers Labeled",
+        hover_name="country", hover_data={"year": True},
+        title="GDP vs Electricity Generation (log₁₀ axes)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
     )
-    fig = add_outlier_labels(fig, df, "log_gdp", "log_electricity_generation")
-    fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>GDP: %{customdata[1]:,.0f}<br>Elec Gen: %{customdata[2]:,.1f} TWh<br>Outlier ID: %{customdata[3]}<extra></extra>")
     return _apply_layout(fig, "GDP (log₁₀ USD)", "Electricity Generation (log₁₀ TWh)")
 
 
 def scatter_population_vs_electricity(df):
+    df = df.copy()
+    df["log_population"] = np.log10(df["population"])
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+
+    df = df.dropna(subset=["log_population", "log_electricity_generation"])
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available", showarrow=False)
+        return fig
+
     fig = px.scatter(
         df, x="log_population", y="log_electricity_generation", color="Point Type",
         color_discrete_map=_COLOR_MAP, opacity=0.45,
-        hover_name="country", hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "population", "electricity_generation"],
-        title="Population vs Electricity Generation (log₁₀ axes) — Outliers Labeled",
+        hover_name="country", hover_data={"year": True},
+        title="Population vs Electricity Generation (log₁₀ axes)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
     )
-    fig = add_outlier_labels(fig, df, "log_population", "log_electricity_generation")
-    fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>Population: %{customdata[1]:,.0f}<br>Elec Gen: %{customdata[2]:,.1f} TWh<extra></extra>")
     return _apply_layout(fig, "Population (log₁₀)", "Electricity Generation (log₁₀ TWh)")
 
 
 def scatter_gdp_vs_population(df):
+    df = df.copy()
+    df["log_population"] = np.log10(df["population"])
+    df["log_gdp"] = np.log10(df["gdp"])
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+
+    df = df.dropna(subset=["log_population", "log_gdp"])
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available", showarrow=False)
+        return fig
+
     fig = px.scatter(
         df, x="log_population", y="log_gdp", color="Point Type",
         color_discrete_map=_COLOR_MAP, opacity=0.45,
-        hover_name="country", hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "population", "gdp"],
-        title="Population vs GDP (log₁₀ axes) — Outliers Labeled",
+        hover_name="country", hover_data={"year": True},
+        title="Population vs GDP (log₁₀ axes)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
     )
-    fig = add_outlier_labels(fig, df, "log_population", "log_gdp")
-    fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>Population: %{customdata[1]:,.0f}<br>GDP: %{customdata[2]:,.0f}<extra></extra>")
     return _apply_layout(fig, "Population (log₁₀)", "GDP (log₁₀ USD)")
 
 
 def scatter_renewables_vs_generation(df):
     if "renewables_share_energy" not in df.columns:
-        print("Column 'renewables_share_energy' not found – skipping chart.")
         return None
+
+    df = df.copy()
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
 
     plot_df = df.dropna(subset=["renewables_share_energy"])
     fig = px.scatter(
         plot_df, x="renewables_share_energy", y="log_electricity_generation",
         color="Point Type", color_discrete_map=_COLOR_MAP, opacity=0.45,
-        hover_name="country", hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "renewables_share_energy", "electricity_generation"],
-        title="Renewables Share vs Electricity Generation — Outliers Labeled",
+        hover_name="country", hover_data={"year": True},
+        title="Renewables Share vs Electricity Generation",
         category_orders={"Point Type": ["Normal", "Outlier"]},
     )
-    fig = add_outlier_labels(fig, plot_df, "renewables_share_energy", "log_electricity_generation")
-    fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>Renewables: %{customdata[1]:.1f}%<br>Elec Gen: %{customdata[2]:,.1f} TWh<extra></extra>")
-    return _apply_layout(fig, "Renewables Share of Energy (%)", "Electricity Generation (log₁₀ TWh)")
-
-
-if __name__ == "__main__":
-    csv_path = "C:\\Uni\\Semester 6\\Data Visiualization\\Data-Visualization-Project\\preprocessing\\owid_energy_visualization_cleaned.csv"
-
-    df = load_data(csv_path)
-    df = detect_outliers(df, z_threshold=1.5)
-
-    print(f"\nTotal outliers detected: {df['is_outlier'].sum()}")
-    print("Top 10 Outliers:")
-    print(df[df["is_outlier"]].nlargest(10, "electricity_generation")[["outlier_id", "country", "year", "electricity_generation"]])
-
-    fig1 = scatter_gdp_vs_electricity(df)
-    fig2 = scatter_population_vs_electricity(df)
-    fig3 = scatter_gdp_vs_population(df)
-    fig4 = scatter_renewables_vs_generation(df)
-
-    fig1.show()
-    fig2.show()
-    fig3.show()
-    if fig4:
-        fig4.show()
+    return _apply_layout(fig, "Renewables Share (%)", "Electricity Generation (log₁₀ TWh)")

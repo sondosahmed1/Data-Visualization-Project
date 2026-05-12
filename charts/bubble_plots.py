@@ -48,6 +48,7 @@ def load_data(csv_path):
 
     # Safe size column for bubbles (prevents negative sizes)
     df["size_electricity"] = df["log_electricity_generation"] - df["log_electricity_generation"].min() + 1
+    df["size_electricity"] = df["size_electricity"].fillna(1).clip(lower=1)
 
     if "renewables_share_energy" in df.columns:
         df["renewables_share_energy"] = df["renewables_share_energy"].clip(lower=0)
@@ -144,59 +145,96 @@ def _apply_layout(fig, x_label, y_label):
 # Bubble Charts
 # =========================================================
 def bubble_gdp_vs_electricity(df):
+    df = df.copy()
+    df["log_gdp"] = np.log10(df["gdp"])
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    
+    df = df.dropna(subset=["log_gdp", "log_electricity_generation"])
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available", showarrow=False, font=dict(size=20))
+        return fig
+
+    min_gen = df["log_electricity_generation"].min()
+    df["size_electricity"] = (df["log_electricity_generation"] - min_gen + 1).fillna(1).clip(lower=1)
+    
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+        df["is_outlier"] = False
+
     fig = px.scatter(
         df,
         x="log_gdp",
         y="log_electricity_generation",
-        size="size_electricity",          # safe size column
+        size="size_electricity",
         size_max=35,
         color="Point Type",
         color_discrete_map=_COLOR_MAP,
         trendline="ols",
         hover_name="country",
-        hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "gdp", "electricity_generation", "population"],
-        title="GDP vs Electricity Generation (log₁₀, bubble = electricity)",
+        hover_data={"year": True},
+        title="GDP vs Electricity Generation (Bubble = Generation)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
-    )
-    fig = add_outlier_labels(fig, df, "log_gdp", "log_electricity_generation")
-    fig.update_traces(
-        hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>GDP: %{customdata[1]:,.0f}<br>Elec Gen: %{customdata[2]:,.1f} TWh<br>Population: %{customdata[3]:,.0f}<extra></extra>"
     )
     return _apply_layout(fig, "GDP (log₁₀ USD)", "Electricity Generation (log₁₀ TWh)")
 
-
 def bubble_population_vs_gdp(df):
+    df = df.copy()
+    df["log_population"] = np.log10(df["population"])
+    df["log_gdp"] = np.log10(df["gdp"])
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    
+    df = df.dropna(subset=["log_population", "log_gdp", "log_electricity_generation"])
+    
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available for this selection", showarrow=False, font=dict(size=20))
+        return fig
+
+    min_gen = df["log_electricity_generation"].min()
+    df["size_electricity"] = (df["log_electricity_generation"] - min_gen + 1).fillna(1).clip(lower=1)
+    
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+
     fig = px.scatter(
         df,
         x="log_population",
         y="log_gdp",
-        size="size_electricity",          # fixed: using safe column
+        size="size_electricity",
         size_max=35,
         color="Point Type",
         color_discrete_map=_COLOR_MAP,
         trendline="ols",
         hover_name="country",
-        hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "population", "gdp", "electricity_generation"],
-        title="Population vs GDP (log₁₀, bubble = electricity)",
+        hover_data={"year": True},
+        title="Population vs GDP (Bubble = Generation)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
-    )
-    fig = add_outlier_labels(fig, df, "log_population", "log_gdp")
-    fig.update_traces(
-        hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>Population: %{customdata[1]:,.0f}<br>GDP: %{customdata[2]:,.0f}<br>Elec Gen: %{customdata[3]:,.1f} TWh<extra></extra>"
     )
     return _apply_layout(fig, "Population (log₁₀)", "GDP (log₁₀ USD)")
 
-
 def bubble_renewables_vs_gdp(df):
     if "renewables_share_energy" not in df.columns:
-        print("Column 'renewables_share_energy' not found – skipping chart.")
         return None
 
-    plot_df = df.dropna(subset=["renewables_share_energy"])
+    df = df.copy()
+    df["log_gdp"] = np.log10(df["gdp"])
+    df["log_electricity_generation"] = np.log10(df["electricity_generation"])
+    
+    df = df.dropna(subset=["renewables_share_energy", "log_gdp", "log_electricity_generation"])
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No data available", showarrow=False, font=dict(size=20))
+        return fig
+
+    min_gen = df["log_electricity_generation"].min()
+    df["size_electricity"] = (df["log_electricity_generation"] - min_gen + 1).fillna(1).clip(lower=1)
+    
+    if "Point Type" not in df.columns:
+        df["Point Type"] = "Normal"
+
     fig = px.scatter(
-        plot_df,
+        df,
         x="renewables_share_energy",
         y="log_gdp",
         size="size_electricity",
@@ -205,66 +243,33 @@ def bubble_renewables_vs_gdp(df):
         color_discrete_map=_COLOR_MAP,
         trendline="ols",
         hover_name="country",
-        hover_data={"year": True, "outlier_id": True},
-        custom_data=["year", "renewables_share_energy", "gdp"],
-        title="Renewables Share vs GDP (bubble = electricity)",
+        hover_data={"year": True},
+        title="Renewables Share vs GDP (Bubble = Generation)",
         category_orders={"Point Type": ["Normal", "Outlier"]},
     )
-    fig = add_outlier_labels(fig, plot_df, "renewables_share_energy", "log_gdp")
-    fig.update_traces(
-        hovertemplate="<b>%{hovertext}</b><br>Year: %{customdata[0]}<br>Renewables: %{customdata[1]:.1f}%<br>GDP: %{customdata[2]:,.0f}<extra></extra>"
-    )
-    return _apply_layout(fig, "Renewables Share of Energy (%)", "GDP (log₁₀ USD)")
-
+    return _apply_layout(fig, "Renewables Share (%)", "GDP (log₁₀ USD)")
 
 def bubble_avg_generation_per_year(df):
     yearly = df.groupby("year", as_index=False)[["electricity_generation", "population"]].mean()
+    yearly = yearly.dropna(subset=["electricity_generation", "population"])
+    if yearly.empty:
+        fig = go.Figure()
+        fig.add_annotation(text="No yearly data available", showarrow=False)
+        return fig
+    
     fig = px.scatter(
         yearly,
         x="year",
         y="electricity_generation",
         size="population",
         size_max=40,
-        title="Average Electricity Generation Per Year",
+        title="Avg Electricity Generation Per Year",
     )
     fig.update_traces(marker=dict(color="#4C9BE8", opacity=0.8, line=dict(width=0.8, color="white")))
     fig.update_layout(
         template="plotly_white",
         font=dict(family="Inter, Arial, sans-serif", size=13),
         xaxis_title="Year",
-        yaxis_title="Average Electricity Generation (TWh)",
+        yaxis_title="Avg Generation (TWh)",
     )
     return fig
-
-
-if __name__ == "__main__":
-<<<<<<< HEAD
-
-    print("CSV path:", csv_path)
-    print("Exists:", csv_path.exists())
-=======
-    csv_path = r"C:\Uni\Semester 6\Data Visiualization\Data-Visualization-Project\preprocessing\owid_energy_visualization_cleaned.csv"
->>>>>>> c520bb26ea83289c289bb75c3a9da17343acc1d3
-
-    df = load_data(csv_path)
-    df = detect_outliers(df, z_threshold=1.5)
-
-    print(f"\nTotal outliers detected: {df['is_outlier'].sum()}")
-    if df['is_outlier'].sum() > 0:
-        print("\nTop 10 Outliers:")
-        print(df[df["is_outlier"]].nlargest(10, "electricity_generation")[["outlier_id", "country", "year", "electricity_generation", "gdp"]])
-
-    fig1 = bubble_gdp_vs_electricity(df)
-    fig2 = bubble_population_vs_gdp(df)
-    fig3 = bubble_renewables_vs_gdp(df)
-    fig4 = bubble_avg_generation_per_year(df)
-
-    fig1.show()
-    fig2.show()
-<<<<<<< HEAD
-    fig3.show()
-=======
-    if fig3:
-        fig3.show()
-    fig4.show()
->>>>>>> c520bb26ea83289c289bb75c3a9da17343acc1d3

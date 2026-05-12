@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: #F8F9FA;
+    font-family: 'Outfit', sans-serif;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #4C9BE8;
+    color: white;
+}
+
+.nav-link {
+    color: #2C3E50;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: #F0F7FF;
+    color: #4C9BE8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2C3E50;
+    font-weight: 700;
+}
+
+.metric-card {
+    background-color: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    border: none;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.rounded-4 {
+    border-radius: 20px !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03) !important;
+}
+
+.nav-pills-custom .nav-link {
+    border-radius: 12px;
+    margin-bottom: 8px;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: #4A5568;
+    transition: all 0.2s ease;
+}
+
+.nav-pills-custom .nav-link.active {
+    background-color: #EBF8FF;
+    color: #3182CE;
+}
+
+.nav-pills-custom .nav-link:hover:not(.active) {
+    background-color: #F7FAFC;
+    color: #2D3748;
+}
+
+.custom-tabs .nav-link {
+    border: none;
+    color: #718096;
+    font-weight: 600;
+    padding: 15px;
+    border-bottom: 3px solid transparent;
+}
+
+.custom-tabs .nav-link.active {
+    color: #3182CE !important;
+    border-bottom-color: #3182CE !important;
+    background: transparent !important;
+}
+
+.metric-card h2 {
+    font-family: 'Inter', sans-serif;
+    color: #2D3748;
+}
+
+.metric-card h6 {
+    letter-spacing: 1px;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
